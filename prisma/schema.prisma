@@ -1,0 +1,443 @@
+// ============================================================================
+// SCHEMA PRISMA — Sistema de Gerenciamento Financeiro Pessoal
+//
+// Princípios aplicados neste schema:
+// - Todo dado financeiro pertence a um User (isolamento total via userId).
+// - Saldo NUNCA é armazenado como fonte de verdade: é sempre derivado da
+//   soma das Movements de uma BankAccount (ver lib/finance/balance.ts).
+// - Nenhuma entidade com histórico financeiro é excluída fisicamente:
+//   usam campo `active` (soft delete / desativação).
+// - Dinheiro é sempre Decimal (nunca Float).
+// - Gastos e Recebimentos só geram Movement quando efetivamente
+//   PAGO / RECEBIDO — cadastrar não movimenta saldo.
+// - Transferências geram duas Movements atômicas (SAIDA na origem,
+//   ENTRADA no destino) amarradas por um registro Transfer, dentro de uma
+//   única transaction do Prisma.
+// ============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------------------------------
+// AUTENTICAÇÃO (Better Auth) + ROLES DA PLATAFORMA
+// ----------------------------------------------------------------------------
+
+enum PlatformRole {
+  USER
+  ADMIN
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+
+  // Campos customizados de plataforma (configurados como additionalFields no Better Auth).
+  // O ADMIN gerencia a plataforma, nunca os dados financeiros de outros usuários —
+  // essa fronteira é reforçada em código (ver lib/auth/guards.ts), não apenas aqui.
+  role   PlatformRole @default(USER)
+  active Boolean      @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sessions Session[]
+  accounts Account[]
+
+  // Dados financeiros — todos com onDelete: Restrict/Cascade controlado
+  // explicitamente para nunca permitir acesso cruzado nem registros órfãos.
+  banks         Bank[]
+  bankAccounts  BankAccount[]
+  categories    Category[]
+  movements     Movement[]
+  transfers     Transfer[]
+  expenses      Expense[]
+  receivables   Receivable[]
+  debts         Debt[]
+  debtPayments  DebtPayment[]
+
+  @@index([role])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+// Contas de login (credenciais/OAuth) do Better Auth.
+// NÃO confundir com BankAccount (conta bancária do usuário) — nomes distintos
+// de propósito para não colidir com o domínio financeiro do sistema.
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+  @@map("verification")
+}
+
+// ----------------------------------------------------------------------------
+// BANCOS E CONTAS
+// ----------------------------------------------------------------------------
+
+model Bank {
+  id     String  @id @default(cuid())
+  userId String
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name    String
+  logoUrl String?
+  active  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bankAccounts BankAccount[]
+
+  @@index([userId])
+  @@map("bank")
+}
+
+enum BankAccountType {
+  CORRENTE
+  POUPANCA
+  RESERVA
+}
+
+// Conta dentro de um banco. O saldo NÃO é um campo aqui — é sempre calculado
+// via sum(Movement.amount) filtrando por sinal (ver lib/finance/balance.ts).
+model BankAccount {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  bankId String
+  bank   Bank   @relation(fields: [bankId], references: [id], onDelete: Restrict)
+
+  name   String
+  type   BankAccountType
+  active Boolean         @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  movementsAsSource Movement[]     @relation("MovementAccount")
+  transfersFrom     Transfer[]     @relation("TransferFrom")
+  transfersTo       Transfer[]     @relation("TransferTo")
+  expensesPaid      Expense[]      @relation("ExpensePaidAccount")
+  receivablesIn     Receivable[]   @relation("ReceivableAccount")
+  debtPayments      DebtPayment[]  @relation("DebtPaymentAccount")
+
+  @@index([userId])
+  @@index([bankId])
+  @@map("bank_account")
+}
+
+// ----------------------------------------------------------------------------
+// CATEGORIAS
+// ----------------------------------------------------------------------------
+
+enum CategoryType {
+  EXPENSE
+  RECEIVABLE
+}
+
+model Category {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name   String
+  type   CategoryType
+  active Boolean      @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  expenses    Expense[]
+  receivables Receivable[]
+
+  // Mesmo nome pode existir para tipos diferentes (ex: "Outros" em gasto e recebimento),
+  // mas não duplicado dentro do mesmo usuário + tipo.
+  @@unique([userId, name, type])
+  @@index([userId])
+  @@map("category")
+}
+
+// ----------------------------------------------------------------------------
+// MOVIMENTAÇÕES — estrutura central de onde o saldo é derivado
+// ----------------------------------------------------------------------------
+
+enum MovementType {
+  ENTRADA
+  SAIDA
+}
+
+// De onde a movimentação se originou. Usado para rastreabilidade e para
+// impedir duplicidade (uma Expense/Receivable/DebtPayment só pode gerar UMA
+// Movement — ver os campos @unique de referência reversa abaixo).
+enum MovementOrigin {
+  MANUAL
+  TRANSFERENCIA
+  GASTO
+  RECEBIMENTO
+  PAGAMENTO_DIVIDA
+}
+
+model Movement {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  accountId String
+  account   BankAccount @relation("MovementAccount", fields: [accountId], references: [id], onDelete: Restrict)
+
+  type   MovementType
+  amount Decimal      @db.Decimal(14, 2) // sempre positivo; o sinal é dado por `type`
+  date   DateTime
+  description String?
+
+  origin MovementOrigin @default(MANUAL)
+
+  // Vínculos de origem (todos opcionais e mutuamente exclusivos na prática).
+  // 1:1 com a entidade de origem — impede que o mesmo gasto/recebimento/pagamento
+  // gere mais de uma movimentação (duplicidade).
+  transferId String?
+  transfer   Transfer? @relation(fields: [transferId], references: [id], onDelete: Restrict)
+
+  expenseId String?  @unique
+  expense   Expense? @relation("ExpenseMovement", fields: [expenseId], references: [id], onDelete: SetNull)
+
+  receivableId String?     @unique
+  receivable   Receivable? @relation("ReceivableMovement", fields: [receivableId], references: [id], onDelete: SetNull)
+
+  debtPaymentId String?      @unique
+  debtPayment   DebtPayment? @relation("DebtPaymentMovement", fields: [debtPaymentId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([accountId])
+  @@index([date])
+  @@index([transferId])
+  @@map("movement")
+}
+
+// Wrapper de uma transferência entre duas BankAccounts do mesmo usuário.
+// Sempre gera exatamente 2 Movements (SAIDA na origem, ENTRADA no destino),
+// criadas dentro da mesma transaction do Prisma.
+model Transfer {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fromAccountId String
+  fromAccount   BankAccount @relation("TransferFrom", fields: [fromAccountId], references: [id], onDelete: Restrict)
+
+  toAccountId String
+  toAccount   BankAccount @relation("TransferTo", fields: [toAccountId], references: [id], onDelete: Restrict)
+
+  amount      Decimal  @db.Decimal(14, 2)
+  date        DateTime
+  description String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  movements Movement[]
+
+  @@index([userId])
+  @@index([fromAccountId])
+  @@index([toAccountId])
+  @@map("transfer")
+}
+
+// ----------------------------------------------------------------------------
+// GASTOS (com suporte a parcelamento)
+// ----------------------------------------------------------------------------
+
+enum ExpenseStatus {
+  PENDENTE
+  PAGO
+}
+
+model Expense {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  title  String
+  amount Decimal       @db.Decimal(14, 2)
+  dueDate DateTime     // data prevista de pagamento
+  status ExpenseStatus @default(PENDENTE)
+
+  // Preenchidos somente quando status = PAGO.
+  paidAccountId String?
+  paidAccount   BankAccount? @relation("ExpensePaidAccount", fields: [paidAccountId], references: [id], onDelete: Restrict)
+  paidAt        DateTime?
+
+  // Parcelamento: cada parcela é seu próprio Expense, agrupado por installmentGroupId.
+  // Parcelas futuras nunca são somadas como gasto — cada uma só impacta saldo
+  // quando ela própria for marcada como PAGA.
+  installmentGroupId String?
+  installmentNumber  Int?
+  installmentTotal   Int?
+
+  // Referência 1:1 reversa para a movimentação gerada ao marcar como PAGO —
+  // impede gerar duas movimentações para o mesmo gasto.
+  movement Movement? @relation("ExpenseMovement")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([dueDate])
+  @@index([status])
+  @@index([installmentGroupId])
+  @@map("expense")
+}
+
+// ----------------------------------------------------------------------------
+// RECEBIMENTOS
+// ----------------------------------------------------------------------------
+
+enum ReceivableStatus {
+  PENDENTE
+  RECEBIDO
+}
+
+model Receivable {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+
+  title        String
+  amount       Decimal          @db.Decimal(14, 2)
+  expectedDate DateTime         // data prevista de recebimento
+  status       ReceivableStatus @default(PENDENTE)
+
+  // Preenchidos somente quando status = RECEBIDO.
+  receivedAccountId String?
+  receivedAccount   BankAccount? @relation("ReceivableAccount", fields: [receivedAccountId], references: [id], onDelete: Restrict)
+  receivedAt         DateTime?
+
+  movement Movement? @relation("ReceivableMovement")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
+  @@index([expectedDate])
+  @@index([status])
+  @@map("receivable")
+}
+
+// ----------------------------------------------------------------------------
+// DÍVIDAS VOLÁTEIS
+// ----------------------------------------------------------------------------
+
+enum DebtStatus {
+  ABERTA
+  QUITADA
+}
+
+model Debt {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title       String
+  totalAmount Decimal    @db.Decimal(14, 2)
+  status      DebtStatus @default(ABERTA)
+
+  // valorPago e valorRestante são SEMPRE derivados de sum(DebtPayment.amount),
+  // nunca armazenados aqui (ver lib/finance/debt.ts).
+  lastPaymentAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments DebtPayment[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("debt")
+}
+
+model DebtPayment {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  debtId String
+  debt   Debt   @relation(fields: [debtId], references: [id], onDelete: Restrict)
+
+  amount Decimal  @db.Decimal(14, 2)
+  date   DateTime
+  note   String?
+
+  accountId String
+  account   BankAccount @relation("DebtPaymentAccount", fields: [accountId], references: [id], onDelete: Restrict)
+
+  movement Movement? @relation("DebtPaymentMovement")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([debtId])
+  @@index([date])
+  @@map("debt_payment")
+}

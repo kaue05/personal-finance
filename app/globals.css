@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Paleta — inspirada em livro-razão: papel neutro, tinta verde-floresta,
+     bronze para destaques, verde/vermelho para entradas e saídas. */
+  --color-bg: #f5f6f3;
+  --color-surface: #ffffff;
+  --color-ink: #16211b;
+  --color-border: #e2e4de;
+  --color-muted: #6b7368;
+
+  --color-primary: #1b4332;
+  --color-primary-foreground: #f5f6f3;
+
+  --color-accent: #b08968;
+  --color-accent-foreground: #22160d;
+
+  --color-positive: #2d6a4f;
+  --color-negative: #9b2c2c;
+}
+
+* {
+  border-color: var(--color-border);
+}
+
+html,
+body {
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+}
+
+body {
+  font-family: var(--font-sans), sans-serif;
+}
+
+/* Linha de "razão" — o elemento de assinatura visual do app: uma régua fina
+   pontilhada usada atrás de listas de valores, remetendo a papel contábil. */
+.ledger-row {
+  position: relative;
+}
+
+.ledger-row + .ledger-row {
+  border-top: 1px solid var(--color-border);
+}
+
+.tabular {
+  font-family: var(--font-mono), monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
