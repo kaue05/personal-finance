@@ -1,22 +1,54 @@
-import { Card } from "@/components/ui/card";
+import { requireUser } from "@/lib/auth/guards";
+import { prisma } from "@/lib/prisma";
 
-export default function BancosPage() {
+import { BankManager } from "@/components/banks/bank-manager";
+
+export default async function BanksPage() {
+  const user = await requireUser();
+
+  const banks = await prisma.bank.findMany({
+    where: {
+      userId: user.id,
+    },
+    include: {
+      _count: {
+        select: {
+          bankAccounts: true,
+        },
+      },
+    },
+    orderBy: [
+      {
+        active: "desc",
+      },
+      {
+        name: "asc",
+      },
+    ],
+  });
+
+  const serializedBanks = banks.map((bank) => ({
+    id: bank.id,
+    name: bank.name,
+    logoUrl: bank.logoUrl,
+    active: bank.active,
+    accountCount: bank._count.bankAccounts,
+  }));
+
   return (
-    <div className="mx-auto max-w-6xl">
+    <div className="mx-auto max-w-5xl">
       <header className="mb-6">
+        <p className="font-display text-sm text-muted">Estrutura financeira</p>
+
         <h1 className="font-display text-2xl text-ink sm:text-3xl">Bancos</h1>
+
+        <p className="mt-1 max-w-2xl text-sm text-muted">
+          Cadastre os bancos onde suas contas estão registradas. Depois, você
+          poderá adicionar contas correntes, poupanças e reservas.
+        </p>
       </header>
 
-      <Card className="border-dashed">
-        <p className="font-display text-lg text-ink">Em construção</p>
-        <p className="mt-1 text-sm text-muted">
-          Gerencie os bancos cadastrados. Um banco usado em alguma conta não pode ser excluído — apenas desativado.
-        </p>
-        <p className="mt-3 text-xs text-muted">
-          Esta tela será implementada na próxima fase, sobre a fundação (schema, autenticação
-          e layout) já construída.
-        </p>
-      </Card>
+      <BankManager initialBanks={serializedBanks} />
     </div>
   );
 }

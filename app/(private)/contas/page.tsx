@@ -1,22 +1,84 @@
-import { Card } from "@/components/ui/card";
+import { requireUser } from "@/lib/auth/guards";
+import { prisma } from "@/lib/prisma";
 
-export default function ContasPage() {
+import { AccountManager } from "@/components/accounts/account-manager";
+
+export default async function AccountsPage() {
+  const user = await requireUser();
+
+  const [banks, accounts] = await Promise.all([
+    prisma.bank.findMany({
+      where: {
+        userId: user.id,
+        active: true,
+      },
+      select: {
+        id: true,
+        name: true,
+        logoUrl: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    }),
+
+    prisma.bankAccount.findMany({
+      where: {
+        userId: user.id,
+      },
+      include: {
+        bank: {
+          select: {
+            id: true,
+            name: true,
+            logoUrl: true,
+          },
+        },
+        _count: {
+          select: {
+            movementsAsSource: true,
+          },
+        },
+      },
+      orderBy: [
+        {
+          active: "desc",
+        },
+        {
+          name: "asc",
+        },
+      ],
+    }),
+  ]);
+
+  const serializedAccounts = accounts.map((account) => ({
+    id: account.id,
+    bankId: account.bank.id,
+    bankName: account.bank.name,
+    bankLogoUrl: account.bank.logoUrl,
+    name: account.name,
+    type: account.type,
+    active: account.active,
+    movementCount: account._count.movementsAsSource,
+  }));
+
   return (
     <div className="mx-auto max-w-6xl">
       <header className="mb-6">
+        <p className="font-display text-sm text-muted">Estrutura financeira</p>
+
         <h1 className="font-display text-2xl text-ink sm:text-3xl">Contas</h1>
+
+        <p className="mt-1 max-w-2xl text-sm text-muted">
+          Cadastre suas contas correntes, poupanças e reservas. O saldo será
+          calculado posteriormente pelas movimentações.
+        </p>
       </header>
 
-      <Card className="border-dashed">
-        <p className="font-display text-lg text-ink">Em construção</p>
-        <p className="mt-1 text-sm text-muted">
-          Gerencie as contas dentro de cada banco. O saldo de cada conta é sempre calculado a partir das movimentações.
-        </p>
-        <p className="mt-3 text-xs text-muted">
-          Esta tela será implementada na próxima fase, sobre a fundação (schema, autenticação
-          e layout) já construída.
-        </p>
-      </Card>
+      <AccountManager
+        initialBanks={banks}
+        initialAccounts={serializedAccounts}
+      />
     </div>
   );
 }

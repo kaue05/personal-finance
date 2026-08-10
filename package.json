@@ -1,5 +1,5 @@
 {
-  "name": "finance-app",
+  "name": "personal-finance",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -27,7 +27,7 @@
     "recharts": "^2.13.0",
     "tailwind-merge": "^2.5.5",
     "typescript": "^5.6.0",
-    "zod": "^3.24.0"
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",

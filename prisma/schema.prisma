@@ -124,9 +124,9 @@ model Verification {
 // ----------------------------------------------------------------------------
 
 model Bank {
-  id     String  @id @default(cuid())
+  id     String @id @default(cuid())
   userId String
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   name    String
   logoUrl String?
@@ -137,6 +137,7 @@ model Bank {
 
   bankAccounts BankAccount[]
 
+  @@unique([userId, name])
   @@index([userId])
   @@map("bank")
 }
@@ -159,18 +160,19 @@ model BankAccount {
 
   name   String
   type   BankAccountType
-  active Boolean         @default(true)
+  active Boolean @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  movementsAsSource Movement[]     @relation("MovementAccount")
-  transfersFrom     Transfer[]     @relation("TransferFrom")
-  transfersTo       Transfer[]     @relation("TransferTo")
-  expensesPaid      Expense[]      @relation("ExpensePaidAccount")
-  receivablesIn     Receivable[]   @relation("ReceivableAccount")
-  debtPayments      DebtPayment[]  @relation("DebtPaymentAccount")
+  movementsAsSource Movement[]   @relation("MovementAccount")
+  transfersFrom     Transfer[]   @relation("TransferFrom")
+  transfersTo       Transfer[]   @relation("TransferTo")
+  expensesPaid      Expense[]    @relation("ExpensePaidAccount")
+  receivablesIn     Receivable[] @relation("ReceivableAccount")
+  debtPayments      DebtPayment[] @relation("DebtPaymentAccount")
 
+  @@unique([userId, bankId, name])
   @@index([userId])
   @@index([bankId])
   @@map("bank_account")
@@ -303,6 +305,7 @@ model Transfer {
 enum ExpenseStatus {
   PENDENTE
   PAGO
+  CANCELADO
 }
 
 model Expense {
@@ -352,6 +355,7 @@ model Expense {
 enum ReceivableStatus {
   PENDENTE
   RECEBIDO
+  CANCELADO
 }
 
 model Receivable {
@@ -362,15 +366,23 @@ model Receivable {
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict)
 
-  title        String
-  amount       Decimal          @db.Decimal(14, 2)
-  expectedDate DateTime         // data prevista de recebimento
-  status       ReceivableStatus @default(PENDENTE)
+  title String
 
-  // Preenchidos somente quando status = RECEBIDO.
+  amount Decimal @db.Decimal(14, 2)
+
+  // Data em que deveria acontecer o recebimento.
+  expectedDate DateTime
+
+  // Mês ao qual o valor pertence.
+  // Exemplo: 2026-08-01 representa "Agosto de 2026".
+  referenceMonth DateTime? @db.Date
+
+  status ReceivableStatus @default(PENDENTE)
+
   receivedAccountId String?
   receivedAccount   BankAccount? @relation("ReceivableAccount", fields: [receivedAccountId], references: [id], onDelete: Restrict)
-  receivedAt         DateTime?
+
+  receivedAt DateTime?
 
   movement Movement? @relation("ReceivableMovement")
 
@@ -380,6 +392,7 @@ model Receivable {
   @@index([userId])
   @@index([categoryId])
   @@index([expectedDate])
+  @@index([referenceMonth])
   @@index([status])
   @@map("receivable")
 }
