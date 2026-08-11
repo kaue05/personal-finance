@@ -60,3 +60,55 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+
+/* Fix para o react-datepicker não pular */
+.react-datepicker-popper {
+  position: absolute !important;
+  transform: none !important;
+}
+
+.react-datepicker__month-picker {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  padding: 0.5rem;
+}
+
+.react-datepicker__month-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  transition: background-color 0.2s;
+}
+
+.react-datepicker__month-text:hover {
+  background-color: rgb(241 245 249);
+}
+
+.react-datepicker__month-text--selected {
+  background-color: rgb(15 23 42);
+  color: white;
+}
+
+.react-datepicker__month-text--selected:hover {
+  background-color: rgb(30 41 59);
+}
+
+.react-datepicker__year-select,
+.react-datepicker__month-select {
+  border-radius: 0.375rem;
+  border: 1px solid rgb(229 231 235);
+  background-color: rgb(249 250 251);
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.react-datepicker__year-select:focus,
+.react-datepicker__month-select:focus {
+  outline: none;
+  border-color: rgb(15 23 42);
+}

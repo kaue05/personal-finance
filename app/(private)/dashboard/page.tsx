@@ -6,15 +6,61 @@ import {
   CardValue,
 } from "@/components/ui/card";
 import { formatBRL } from "@/lib/utils";
+import { MonthSelector } from "@/components/dashboard/month-selector";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    month?: string;
+  }>;
+}) {
   const user = await requireUser();
-  const summary = await getDashboardSummary(user.id);
+  const params = await searchParams;
+
+  const monthParam = params.month;
+
+  let referenceDate: Date;
+
+  if (monthParam) {
+    const [yearStr, monthStr] = monthParam.split("-");
+    const year = Number(yearStr);
+    const month = Number(monthStr);
+
+    if (
+      year &&
+      month &&
+      month >= 1 &&
+      month <= 12
+    ) {
+      // Date.UTC usa índice 0-11, então subtraímos 1
+      referenceDate = new Date(
+        Date.UTC(year, month - 1, 1, 12, 0, 0),
+      );
+    } else {
+      referenceDate = new Date();
+    }
+  } else {
+    referenceDate = new Date();
+  }
+
+  const summary = await getDashboardSummary(
+    user.id,
+    referenceDate,
+  );
 
   const hasAnyAccount =
     summary.patrimony.byAccount.length > 0;
 
   const firstName = user.name.trim().split(" ")[0];
+
+  const currentMonthLabel = referenceDate.toLocaleString(
+    "pt-BR",
+    {
+      month: "long",
+      year: "numeric",
+    },
+  );
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -23,12 +69,18 @@ export default async function DashboardPage() {
           Olá, {firstName}
         </p>
 
-        <h1 className="font-display text-2xl text-ink sm:text-3xl">
-          Visão geral
-        </h1>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+          <h1 className="font-display text-2xl text-ink sm:text-3xl">
+            Visão geral
+          </h1>
+
+          <MonthSelector />
+        </div>
 
         <p className="mt-1 text-sm text-muted">
-          Acompanhe seu patrimônio e o fluxo financeiro do mês.
+          Mês de referência:{" "}
+          {currentMonthLabel.charAt(0).toUpperCase() +
+            currentMonthLabel.slice(1)}
         </p>
       </header>
 
@@ -58,7 +110,7 @@ export default async function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          <Card className="col-span-2 sm:col-span-3 lg:col-span-2">
+          <Card className="col-span-2 sm:col-span-3 lg:col-span-2 bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950/20 dark:to-blue-950/20">
             <CardLabel>Saldo total</CardLabel>
 
             <CardValue className="text-3xl">
@@ -72,7 +124,7 @@ export default async function DashboardPage() {
             </p>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20">
             <CardLabel>Recebido no mês</CardLabel>
 
             <CardValue className="text-positive">
@@ -86,7 +138,7 @@ export default async function DashboardPage() {
             </p>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-950/20 dark:to-red-950/20">
             <CardLabel>Gastos pagos no mês</CardLabel>
 
             <CardValue className="text-negative">
@@ -100,7 +152,7 @@ export default async function DashboardPage() {
             </p>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20">
             <CardLabel>Gastos pendentes</CardLabel>
 
             <CardValue>
@@ -114,7 +166,7 @@ export default async function DashboardPage() {
             </p>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/20 dark:to-purple-950/20">
             <CardLabel>Recebimentos pendentes</CardLabel>
 
             <CardValue className="text-positive">
@@ -128,7 +180,7 @@ export default async function DashboardPage() {
             </p>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-cyan-50 to-sky-50 dark:from-cyan-950/20 dark:to-sky-950/20">
             <CardLabel>Recebido referente ao mês</CardLabel>
 
             <CardValue className="text-positive">
@@ -142,7 +194,7 @@ export default async function DashboardPage() {
             </p>
           </Card>
 
-          <Card className="border-dashed">
+          <Card className="border-dashed bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-950/20 dark:to-gray-950/20">
             <CardLabel>Restante recebido do mês</CardLabel>
 
             <CardValue>
@@ -156,7 +208,7 @@ export default async function DashboardPage() {
             </p>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-zinc-50 to-neutral-50 dark:from-zinc-950/20 dark:to-neutral-950/20">
             <CardLabel>Recebimentos cancelados</CardLabel>
 
             <CardValue>
@@ -285,7 +337,7 @@ export default async function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <Card>
+          <Card className="bg-gradient-to-br from-slate-50 to-gray-50 dark:from-slate-950/20 dark:to-gray-950/20">
             <CardLabel>Total das dívidas</CardLabel>
 
             <CardValue>
@@ -295,7 +347,7 @@ export default async function DashboardPage() {
             </CardValue>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20">
             <CardLabel>Total pago</CardLabel>
 
             <CardValue className="text-positive">
@@ -305,7 +357,7 @@ export default async function DashboardPage() {
             </CardValue>
           </Card>
 
-          <Card>
+          <Card className="bg-gradient-to-br from-rose-50 to-red-50 dark:from-rose-950/20 dark:to-red-950/20">
             <CardLabel>Total restante</CardLabel>
 
             <CardValue className="text-negative">

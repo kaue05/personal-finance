@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE "user" ADD COLUMN     "currency" TEXT NOT NULL DEFAULT 'BRL',
+ADD COLUMN     "dateFormat" TEXT NOT NULL DEFAULT 'DD/MM/YYYY',
+ADD COLUMN     "firstDayOfWeek" TEXT NOT NULL DEFAULT 'monday',
+ADD COLUMN     "fiscalYearStart" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "theme" TEXT NOT NULL DEFAULT 'light';

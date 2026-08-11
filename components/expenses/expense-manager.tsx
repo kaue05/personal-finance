@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 
 type Category = {
   id: string;
@@ -39,6 +39,40 @@ type ExpenseManagerProps = {
   initialExpenses: Expense[];
 };
 
+const MONTHS = [
+  { value: "01", label: "Janeiro" },
+  { value: "02", label: "Fevereiro" },
+  { value: "03", label: "Março" },
+  { value: "04", label: "Abril" },
+  { value: "05", label: "Maio" },
+  { value: "06", label: "Junho" },
+  { value: "07", label: "Julho" },
+  { value: "08", label: "Agosto" },
+  { value: "09", label: "Setembro" },
+  { value: "10", label: "Outubro" },
+  { value: "11", label: "Novembro" },
+  { value: "12", label: "Dezembro" },
+];
+
+function generateYears() {
+  const currentYear = new Date().getFullYear();
+  const startYear = currentYear - 2;
+  const endYear = currentYear + 5;
+
+  const years = [];
+
+  for (let year = startYear; year <= endYear; year++) {
+    years.push({
+      value: String(year),
+      label: String(year),
+    });
+  }
+
+  return years;
+}
+
+const YEARS = generateYears();
+
 const statusLabels: Record<ExpenseStatus, string> = {
   PENDENTE: "Pendente",
   PAGO: "Pago",
@@ -59,7 +93,9 @@ function formatBRL(value: string) {
 }
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat("pt-BR").format(new Date(`${value}T12:00:00`));
+  return new Intl.DateTimeFormat("pt-BR").format(
+    new Date(`${value}T12:00:00`),
+  );
 }
 
 export function ExpenseManager({
@@ -76,24 +112,48 @@ export function ExpenseManager({
   const [amount, setAmount] = useState("");
   const [dueDate, setDueDate] = useState("");
 
-  const [selectedStatus, setSelectedStatus] = useState<ExpenseStatus | "TODOS">(
-    "TODOS",
-  );
+  const [selectedStatus, setSelectedStatus] =
+    useState<ExpenseStatus | "TODOS">("TODOS");
+
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
 
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const [payingExpense, setPayingExpense] = useState<Expense | null>(null);
+  const [payingExpense, setPayingExpense] =
+    useState<Expense | null>(null);
   const [paymentAccountId, setPaymentAccountId] = useState("");
   const [paymentDate, setPaymentDate] = useState("");
 
-  const [installmentTotal, setInstallmentTotal] = useState("1");
+  const [installmentTotal, setInstallmentTotal] =
+    useState("1");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const filteredExpenses = expenses.filter((expense) => {
-    return selectedStatus === "TODOS" || expense.status === selectedStatus;
-  });
+  const filteredExpenses = useMemo(() => {
+    return expenses.filter((expense) => {
+      const matchesStatus =
+        selectedStatus === "TODOS" ||
+        expense.status === selectedStatus;
+
+      let matchesMonth = true;
+
+      if (selectedMonth && selectedYear) {
+        const dateToCheck =
+          expense.status === "PAGO" && expense.paidAt
+            ? expense.paidAt
+            : expense.dueDate;
+
+        const [year, month] = dateToCheck.split("-");
+
+        matchesMonth =
+          month === selectedMonth && year === selectedYear;
+      }
+
+      return matchesStatus && matchesMonth;
+    });
+  }, [expenses, selectedStatus, selectedMonth, selectedYear]);
 
   function resetForm() {
     setCategoryId("");
@@ -111,7 +171,9 @@ export function ExpenseManager({
     }
 
     if (expense.installmentTotal) {
-      setError("Parcelas não podem ser editadas individualmente nesta versão.");
+      setError(
+        "Parcelas não podem ser editadas individualmente nesta versão.",
+      );
       return;
     }
 
@@ -124,7 +186,9 @@ export function ExpenseManager({
     setError("");
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
     setLoading(true);
@@ -134,7 +198,9 @@ export function ExpenseManager({
 
     try {
       const response = await fetch(
-        isEditing ? `/api/expenses/${editingId}` : "/api/expenses",
+        isEditing
+          ? `/api/expenses/${editingId}`
+          : "/api/expenses",
         {
           method: isEditing ? "PATCH" : "POST",
           headers: {
@@ -153,18 +219,21 @@ export function ExpenseManager({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Não foi possível salvar o gasto");
+        throw new Error(
+          data.error ?? "Não foi possível salvar o gasto",
+        );
       }
 
       const createdExpenses = data.expenses ?? [data];
 
-      const normalizedExpenses: Expense[] = createdExpenses.map(
-        (item: any) => ({
+      const normalizedExpenses: Expense[] =
+        createdExpenses.map((item: any) => ({
           id: item.id,
           categoryId: item.categoryId,
           categoryName:
-            categories.find((category) => category.id === item.categoryId)
-              ?.name ?? item.category.name,
+            categories.find(
+              (category) => category.id === item.categoryId,
+            )?.name ?? item.category.name,
           title: item.title,
           amount: item.amount.toString(),
           dueDate: item.dueDate.slice(0, 10),
@@ -174,13 +243,14 @@ export function ExpenseManager({
           installmentGroupId: item.installmentGroupId,
           installmentNumber: item.installmentNumber,
           installmentTotal: item.installmentTotal,
-        }),
-      );
+        }));
 
       const firstExpense = normalizedExpenses[0];
 
       if (!firstExpense) {
-        throw new Error("A API não retornou nenhum gasto criado ou atualizado");
+        throw new Error(
+          "A API não retornou nenhum gasto criado ou atualizado",
+        );
       }
 
       if (isEditing) {
@@ -188,20 +258,25 @@ export function ExpenseManager({
           current.map((expense) =>
             expense.id === firstExpense.id
               ? {
-                  ...expense,
-                  ...firstExpense,
-                }
+                ...expense,
+                ...firstExpense,
+              }
               : expense,
           ),
         );
       } else {
-        setExpenses((current) => [...normalizedExpenses, ...current]);
+        setExpenses((current) => [
+          ...normalizedExpenses,
+          ...current,
+        ]);
       }
 
       resetForm();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Não foi possível salvar o gasto",
+        err instanceof Error
+          ? err.message
+          : "Não foi possível salvar o gasto",
       );
     } finally {
       setLoading(false);
@@ -211,11 +286,15 @@ export function ExpenseManager({
   function openPayment(expense: Expense) {
     setPayingExpense(expense);
     setPaymentAccountId("");
-    setPaymentDate(new Date().toISOString().slice(0, 10));
+    setPaymentDate(
+      new Date().toISOString().slice(0, 10),
+    );
     setError("");
   }
 
-  async function handlePayment(event: FormEvent<HTMLFormElement>) {
+  async function handlePayment(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
     if (!payingExpense) {
@@ -226,21 +305,27 @@ export function ExpenseManager({
     setError("");
 
     try {
-      const response = await fetch(`/api/expenses/${payingExpense.id}/pay`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `/api/expenses/${payingExpense.id}/pay`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            accountId: paymentAccountId,
+            paidAt: paymentDate,
+          }),
         },
-        body: JSON.stringify({
-          accountId: paymentAccountId,
-          paidAt: paymentDate,
-        }),
-      });
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Não foi possível registrar o pagamento");
+        throw new Error(
+          data.error ??
+          "Não foi possível registrar o pagamento",
+        );
       }
 
       const paidAccount = accounts.find(
@@ -251,13 +336,13 @@ export function ExpenseManager({
         current.map((expense) =>
           expense.id === payingExpense.id
             ? {
-                ...expense,
-                status: "PAGO",
-                paidAt: paymentDate,
-                paidAccountName: paidAccount
-                  ? `${paidAccount.bank.name} — ${paidAccount.name}`
-                  : null,
-              }
+              ...expense,
+              status: "PAGO",
+              paidAt: paymentDate,
+              paidAccountName: paidAccount
+                ? `${paidAccount.bank.name} — ${paidAccount.name}`
+                : null,
+            }
             : expense,
         ),
       );
@@ -287,23 +372,28 @@ export function ExpenseManager({
     setError("");
 
     try {
-      const response = await fetch(`/api/expenses/${expense.id}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/expenses/${expense.id}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Não foi possível cancelar o gasto");
+        throw new Error(
+          data.error ?? "Não foi possível cancelar o gasto",
+        );
       }
 
       setExpenses((current) =>
         current.map((item) =>
           item.id === expense.id
             ? {
-                ...item,
-                status: "CANCELADO",
-              }
+              ...item,
+              status: "CANCELADO",
+            }
             : item,
         ),
       );
@@ -316,6 +406,11 @@ export function ExpenseManager({
     } finally {
       setLoading(false);
     }
+  }
+
+  function clearMonthFilter() {
+    setSelectedMonth("");
+    setSelectedYear("");
   }
 
   return (
@@ -336,7 +431,10 @@ export function ExpenseManager({
             Cadastre uma categoria de gasto antes de continuar.
           </p>
         ) : (
-          <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
+          <form
+            onSubmit={handleSubmit}
+            className="grid gap-4 md:grid-cols-2"
+          >
             <div>
               <label
                 htmlFor="expense-title"
@@ -348,7 +446,9 @@ export function ExpenseManager({
               <input
                 id="expense-title"
                 value={title}
-                onChange={(event) => setTitle(event.target.value)}
+                onChange={(event) =>
+                  setTitle(event.target.value)
+                }
                 placeholder="Ex.: Compra do mercado"
                 required
                 maxLength={150}
@@ -367,14 +467,19 @@ export function ExpenseManager({
               <select
                 id="expense-category"
                 value={categoryId}
-                onChange={(event) => setCategoryId(event.target.value)}
+                onChange={(event) =>
+                  setCategoryId(event.target.value)
+                }
                 required
                 className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
               >
                 <option value="">Selecione</option>
 
                 {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
+                  <option
+                    key={category.id}
+                    value={category.id}
+                  >
                     {category.name}
                   </option>
                 ))}
@@ -392,7 +497,9 @@ export function ExpenseManager({
               <input
                 id="expense-amount"
                 value={amount}
-                onChange={(event) => setAmount(event.target.value)}
+                onChange={(event) =>
+                  setAmount(event.target.value)
+                }
                 placeholder="0,00"
                 inputMode="decimal"
                 required
@@ -414,7 +521,9 @@ export function ExpenseManager({
                 min="1"
                 max="120"
                 value={installmentTotal}
-                onChange={(event) => setInstallmentTotal(event.target.value)}
+                onChange={(event) =>
+                  setInstallmentTotal(event.target.value)
+                }
                 disabled={Boolean(editingId)}
                 required
                 className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink disabled:opacity-50"
@@ -437,7 +546,9 @@ export function ExpenseManager({
                 id="expense-due-date"
                 type="date"
                 value={dueDate}
-                onChange={(event) => setDueDate(event.target.value)}
+                onChange={(event) =>
+                  setDueDate(event.target.value)
+                }
                 required
                 className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
               />
@@ -488,23 +599,73 @@ export function ExpenseManager({
             </p>
           </div>
 
-          <select
-            value={selectedStatus}
-            onChange={(event) =>
-              setSelectedStatus(event.target.value as ExpenseStatus | "TODOS")
-            }
-            className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
-          >
-            <option value="TODOS">Todos</option>
-            <option value="PENDENTE">Pendentes</option>
-            <option value="PAGO">Pagos</option>
-            <option value="CANCELADO">Cancelados</option>
-          </select>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Todos os meses</option>
+
+              {MONTHS.map((month) => (
+                <option
+                  key={month.value}
+                  value={month.value}
+                >
+                  {month.label}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Todos os anos</option>
+
+              {YEARS.map((year) => (
+                <option
+                  key={year.value}
+                  value={year.value}
+                >
+                  {year.label}
+                </option>
+              ))}
+            </select>
+
+            {(selectedMonth || selectedYear) && (
+              <button
+                type="button"
+                onClick={clearMonthFilter}
+                className="rounded-xl bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+              >
+                Limpar
+              </button>
+            )}
+
+            <select
+              value={selectedStatus}
+              onChange={(event) =>
+                setSelectedStatus(
+                  event.target.value as ExpenseStatus | "TODOS",
+                )
+              }
+              className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
+            >
+              <option value="TODOS">Todos</option>
+              <option value="PENDENTE">Pendentes</option>
+              <option value="PAGO">Pagos</option>
+              <option value="CANCELADO">Cancelados</option>
+            </select>
+          </div>
         </div>
 
         {filteredExpenses.length === 0 ? (
           <div className="rounded-xl border border-dashed border-line p-6 text-center">
-            <p className="text-sm text-muted">Nenhum gasto encontrado.</p>
+            <p className="text-sm text-muted">
+              Nenhum gasto encontrado.
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -516,7 +677,9 @@ export function ExpenseManager({
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium text-ink">{expense.title}</p>
+                      <p className="font-medium text-ink">
+                        {expense.title}
+                      </p>
 
                       {expense.installmentNumber &&
                         expense.installmentTotal && (
@@ -597,10 +760,14 @@ export function ExpenseManager({
             </h2>
 
             <p className="mt-1 text-sm text-muted">
-              {payingExpense.title} — {formatBRL(payingExpense.amount)}
+              {payingExpense.title} —{" "}
+              {formatBRL(payingExpense.amount)}
             </p>
 
-            <form onSubmit={handlePayment} className="mt-5 space-y-4">
+            <form
+              onSubmit={handlePayment}
+              className="mt-5 space-y-4"
+            >
               <div>
                 <label
                   htmlFor="payment-account"
@@ -612,14 +779,19 @@ export function ExpenseManager({
                 <select
                   id="payment-account"
                   value={paymentAccountId}
-                  onChange={(event) => setPaymentAccountId(event.target.value)}
+                  onChange={(event) =>
+                    setPaymentAccountId(event.target.value)
+                  }
                   required
                   className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm"
                 >
                   <option value="">Selecione</option>
 
                   {accounts.map((account) => (
-                    <option key={account.id} value={account.id}>
+                    <option
+                      key={account.id}
+                      value={account.id}
+                    >
                       {account.bank.name} — {account.name}
                     </option>
                   ))}
@@ -638,7 +810,9 @@ export function ExpenseManager({
                   id="payment-date"
                   type="date"
                   value={paymentDate}
-                  onChange={(event) => setPaymentDate(event.target.value)}
+                  onChange={(event) =>
+                    setPaymentDate(event.target.value)
+                  }
                   required
                   className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm"
                 />
@@ -664,7 +838,9 @@ export function ExpenseManager({
                   disabled={loading}
                   className="rounded-xl bg-positive px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                 >
-                  {loading ? "Registrando..." : "Confirmar pagamento"}
+                  {loading
+                    ? "Registrando..."
+                    : "Confirmar pagamento"}
                 </button>
               </div>
             </form>

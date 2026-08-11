@@ -18,17 +18,11 @@ function monthRange(reference = new Date()) {
   };
 }
 
-/**
- * Reúne todos os indicadores da Dashboard.
- *
- * Importante:
- * - receitasDoMes usa a data real da movimentação de entrada;
- * - gastosPagosDoMes usa a data real da movimentação de saída;
- * - referenceMonth representa competência, não fluxo de caixa;
- * - restanteRecebidoDoMes é apenas um indicador calculado.
- */
-export async function getDashboardSummary(userId: string) {
-  const { start, end } = monthRange();
+export async function getDashboardSummary(
+  userId: string,
+  referenceDate: Date = new Date(),
+) {
+  const { start, end } = monthRange(referenceDate);
 
   const [
     patrimony,
@@ -44,8 +38,6 @@ export async function getDashboardSummary(userId: string) {
 
     getDebtsSummary(userId),
 
-    // Entradas efetivadas no mês.
-    // A data principal é Movement.date.
     prisma.movement.aggregate({
       where: {
         userId,
@@ -61,8 +53,6 @@ export async function getDashboardSummary(userId: string) {
       },
     }),
 
-    // Gastos efetivamente pagos no mês.
-    // A data principal é Movement.date.
     prisma.movement.aggregate({
       where: {
         userId,
@@ -98,7 +88,6 @@ export async function getDashboardSummary(userId: string) {
       },
     }),
 
-    // Recebimentos recebidos cuja competência é o mês atual.
     prisma.receivable.aggregate({
       where: {
         userId,

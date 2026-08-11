@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useMemo, useState } from "react";
 
 type Category = {
   id: string;
@@ -15,7 +15,10 @@ type Account = {
   };
 };
 
-type ReceivableStatus = "PENDENTE" | "RECEBIDO" | "CANCELADO";
+type ReceivableStatus =
+  | "PENDENTE"
+  | "RECEBIDO"
+  | "CANCELADO";
 
 type Receivable = {
   id: string;
@@ -36,13 +39,53 @@ type ReceivableManagerProps = {
   initialReceivables: Receivable[];
 };
 
-const statusLabels: Record<ReceivableStatus, string> = {
+const MONTHS = [
+  { value: "01", label: "Janeiro" },
+  { value: "02", label: "Fevereiro" },
+  { value: "03", label: "Março" },
+  { value: "04", label: "Abril" },
+  { value: "05", label: "Maio" },
+  { value: "06", label: "Junho" },
+  { value: "07", label: "Julho" },
+  { value: "08", label: "Agosto" },
+  { value: "09", label: "Setembro" },
+  { value: "10", label: "Outubro" },
+  { value: "11", label: "Novembro" },
+  { value: "12", label: "Dezembro" },
+];
+
+function generateYears() {
+  const currentYear = new Date().getFullYear();
+  const startYear = currentYear - 2;
+  const endYear = currentYear + 5;
+
+  const years = [];
+
+  for (let year = startYear; year <= endYear; year++) {
+    years.push({
+      value: String(year),
+      label: String(year),
+    });
+  }
+
+  return years;
+}
+
+const YEARS = generateYears();
+
+const statusLabels: Record<
+  ReceivableStatus,
+  string
+> = {
   PENDENTE: "Pendente",
   RECEBIDO: "Recebido",
   CANCELADO: "Cancelado",
 };
 
-const statusClasses: Record<ReceivableStatus, string> = {
+const statusClasses: Record<
+  ReceivableStatus,
+  string
+> = {
   PENDENTE: "bg-yellow-500/10 text-yellow-700",
   RECEBIDO: "bg-positive/10 text-positive",
   CANCELADO: "bg-muted/10 text-muted",
@@ -56,7 +99,9 @@ function formatBRL(value: string) {
 }
 
 function formatDate(value: string) {
-  return new Intl.DateTimeFormat("pt-BR").format(new Date(`${value}T12:00:00`));
+  return new Intl.DateTimeFormat("pt-BR").format(
+    new Date(`${value}T12:00:00`),
+  );
 }
 
 export function ReceivableManager({
@@ -66,32 +111,65 @@ export function ReceivableManager({
 }: ReceivableManagerProps) {
   const [categories] = useState(initialCategories);
   const [accounts] = useState(initialAccounts);
-  const [receivables, setReceivables] = useState(initialReceivables);
+  const [receivables, setReceivables] = useState(
+    initialReceivables,
+  );
 
   const [categoryId, setCategoryId] = useState("");
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [expectedDate, setExpectedDate] = useState("");
 
-  const [selectedStatus, setSelectedStatus] = useState<
-    ReceivableStatus | "TODOS"
-  >("TODOS");
+  const [selectedStatus, setSelectedStatus] =
+    useState<ReceivableStatus | "TODOS">("TODOS");
 
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
 
-  const [receivingItem, setReceivingItem] = useState<Receivable | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(
+    null,
+  );
+
+  const [receivingItem, setReceivingItem] =
+    useState<Receivable | null>(null);
   const [accountId, setAccountId] = useState("");
   const [receivedAt, setReceivedAt] = useState("");
 
-  const [referenceMonth, setReferenceMonth] = useState("");
+  const [referenceMonth, setReferenceMonth] =
+    useState("");
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const filteredReceivables = receivables.filter(
-    (receivable) =>
-      selectedStatus === "TODOS" || receivable.status === selectedStatus,
-  );
+  const filteredReceivables = useMemo(() => {
+    return receivables.filter((receivable) => {
+      const matchesStatus =
+        selectedStatus === "TODOS" ||
+        receivable.status === selectedStatus;
+
+      let matchesMonth = true;
+
+      if (selectedMonth && selectedYear) {
+        const dateToCheck =
+          receivable.status === "RECEBIDO" &&
+            receivable.receivedAt
+            ? receivable.receivedAt
+            : receivable.expectedDate;
+
+        const [year, month] = dateToCheck.split("-");
+
+        matchesMonth =
+          month === selectedMonth && year === selectedYear;
+      }
+
+      return matchesStatus && matchesMonth;
+    });
+  }, [
+    receivables,
+    selectedStatus,
+    selectedMonth,
+    selectedYear,
+  ]);
 
   function resetForm() {
     setCategoryId("");
@@ -117,7 +195,9 @@ export function ReceivableManager({
     setError("");
   }
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
     setLoading(true);
@@ -127,7 +207,9 @@ export function ReceivableManager({
 
     try {
       const response = await fetch(
-        isEditing ? `/api/receivables/${editingId}` : "/api/receivables",
+        isEditing
+          ? `/api/receivables/${editingId}`
+          : "/api/receivables",
         {
           method: isEditing ? "PATCH" : "POST",
           headers: {
@@ -146,15 +228,21 @@ export function ReceivableManager({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error ?? "Não foi possível salvar o recebimento");
+        throw new Error(
+          data.error ??
+          "Não foi possível salvar o recebimento",
+        );
       }
 
-      const category = categories.find((item) => item.id === data.categoryId);
+      const category = categories.find(
+        (item) => item.id === data.categoryId,
+      );
 
       const updatedReceivable: Receivable = {
         id: data.id,
         categoryId: data.categoryId,
-        categoryName: category?.name ?? data.category.name,
+        categoryName:
+          category?.name ?? data.category.name,
         title: data.title,
         amount: data.amount.toString(),
         expectedDate: data.expectedDate.slice(0, 10),
@@ -171,14 +259,17 @@ export function ReceivableManager({
           current.map((item) =>
             item.id === updatedReceivable.id
               ? {
-                  ...item,
-                  ...updatedReceivable,
-                }
+                ...item,
+                ...updatedReceivable,
+              }
               : item,
           ),
         );
       } else {
-        setReceivables((current) => [updatedReceivable, ...current]);
+        setReceivables((current) => [
+          updatedReceivable,
+          ...current,
+        ]);
       }
 
       resetForm();
@@ -206,15 +297,19 @@ export function ReceivableManager({
     setError("");
 
     try {
-      const response = await fetch(`/api/receivables/${receivable.id}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/receivables/${receivable.id}`,
+        {
+          method: "DELETE",
+        },
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.error ?? "Não foi possível cancelar o recebimento",
+          data.error ??
+          "Não foi possível cancelar o recebimento",
         );
       }
 
@@ -222,9 +317,9 @@ export function ReceivableManager({
         current.map((item) =>
           item.id === receivable.id
             ? {
-                ...item,
-                status: "CANCELADO",
-              }
+              ...item,
+              status: "CANCELADO",
+            }
             : item,
         ),
       );
@@ -242,11 +337,15 @@ export function ReceivableManager({
   function openReceive(receivable: Receivable) {
     setReceivingItem(receivable);
     setAccountId("");
-    setReceivedAt(new Date().toISOString().slice(0, 10));
+    setReceivedAt(
+      new Date().toISOString().slice(0, 10),
+    );
     setError("");
   }
 
-  async function handleReceive(event: FormEvent<HTMLFormElement>) {
+  async function handleReceive(
+    event: FormEvent<HTMLFormElement>,
+  ) {
     event.preventDefault();
 
     if (!receivingItem) {
@@ -275,23 +374,26 @@ export function ReceivableManager({
 
       if (!response.ok) {
         throw new Error(
-          data.error ?? "Não foi possível registrar o recebimento",
+          data.error ??
+          "Não foi possível registrar o recebimento",
         );
       }
 
-      const account = accounts.find((item) => item.id === accountId);
+      const account = accounts.find(
+        (item) => item.id === accountId,
+      );
 
       setReceivables((current) =>
         current.map((item) =>
           item.id === receivingItem.id
             ? {
-                ...item,
-                status: "RECEBIDO",
-                receivedAt,
-                receivedAccountName: account
-                  ? `${account.bank.name} — ${account.name}`
-                  : null,
-              }
+              ...item,
+              status: "RECEBIDO",
+              receivedAt,
+              receivedAccountName: account
+                ? `${account.bank.name} — ${account.name}`
+                : null,
+            }
             : item,
         ),
       );
@@ -308,12 +410,19 @@ export function ReceivableManager({
     }
   }
 
+  function clearMonthFilter() {
+    setSelectedMonth("");
+    setSelectedYear("");
+  }
+
   return (
     <div className="space-y-6">
       <section className="rounded-2xl border border-line bg-surface p-5">
         <div className="mb-5">
           <h2 className="font-display text-lg text-ink">
-            {editingId ? "Editar recebimento" : "Novo recebimento"}
+            {editingId
+              ? "Editar recebimento"
+              : "Novo recebimento"}
           </h2>
 
           <p className="mt-1 text-sm text-muted">
@@ -326,7 +435,10 @@ export function ReceivableManager({
             Cadastre uma categoria de recebimento antes de continuar.
           </p>
         ) : (
-          <form onSubmit={handleSubmit} className="grid gap-4 md:grid-cols-2">
+          <form
+            onSubmit={handleSubmit}
+            className="grid gap-4 md:grid-cols-2"
+          >
             <div>
               <label
                 htmlFor="receivable-title"
@@ -338,7 +450,9 @@ export function ReceivableManager({
               <input
                 id="receivable-title"
                 value={title}
-                onChange={(event) => setTitle(event.target.value)}
+                onChange={(event) =>
+                  setTitle(event.target.value)
+                }
                 placeholder="Ex.: Pagamento do salário"
                 required
                 maxLength={150}
@@ -357,14 +471,19 @@ export function ReceivableManager({
               <select
                 id="receivable-category"
                 value={categoryId}
-                onChange={(event) => setCategoryId(event.target.value)}
+                onChange={(event) =>
+                  setCategoryId(event.target.value)
+                }
                 required
                 className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
               >
                 <option value="">Selecione</option>
 
                 {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
+                  <option
+                    key={category.id}
+                    value={category.id}
+                  >
                     {category.name}
                   </option>
                 ))}
@@ -382,7 +501,9 @@ export function ReceivableManager({
               <input
                 id="receivable-amount"
                 value={amount}
-                onChange={(event) => setAmount(event.target.value)}
+                onChange={(event) =>
+                  setAmount(event.target.value)
+                }
                 placeholder="0,00"
                 inputMode="decimal"
                 required
@@ -402,7 +523,9 @@ export function ReceivableManager({
                 id="receivable-date"
                 type="date"
                 value={expectedDate}
-                onChange={(event) => setExpectedDate(event.target.value)}
+                onChange={(event) =>
+                  setExpectedDate(event.target.value)
+                }
                 required
                 className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
               />
@@ -420,7 +543,9 @@ export function ReceivableManager({
                 id="receivable-reference-month"
                 type="month"
                 value={referenceMonth}
-                onChange={(event) => setReferenceMonth(event.target.value)}
+                onChange={(event) =>
+                  setReferenceMonth(event.target.value)
+                }
                 required
                 className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
               />
@@ -476,25 +601,79 @@ export function ReceivableManager({
             </p>
           </div>
 
-          <select
-            value={selectedStatus}
-            onChange={(event) =>
-              setSelectedStatus(
-                event.target.value as ReceivableStatus | "TODOS",
-              )
-            }
-            className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
-          >
-            <option value="TODOS">Todos</option>
-            <option value="PENDENTE">Pendentes</option>
-            <option value="RECEBIDO">Recebidos</option>
-            <option value="CANCELADO">Cancelados</option>
-          </select>
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={selectedMonth}
+              onChange={(e) =>
+                setSelectedMonth(e.target.value)
+              }
+              className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Todos os meses</option>
+
+              {MONTHS.map((month) => (
+                <option
+                  key={month.value}
+                  value={month.value}
+                >
+                  {month.label}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedYear}
+              onChange={(e) =>
+                setSelectedYear(e.target.value)
+              }
+              className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Todos os anos</option>
+
+              {YEARS.map((year) => (
+                <option
+                  key={year.value}
+                  value={year.value}
+                >
+                  {year.label}
+                </option>
+              ))}
+            </select>
+
+            {(selectedMonth || selectedYear) && (
+              <button
+                type="button"
+                onClick={clearMonthFilter}
+                className="rounded-xl bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+              >
+                Limpar
+              </button>
+            )}
+
+            <select
+              value={selectedStatus}
+              onChange={(event) =>
+                setSelectedStatus(
+                  event.target.value as
+                  | ReceivableStatus
+                  | "TODOS",
+                )
+              }
+              className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
+            >
+              <option value="TODOS">Todos</option>
+              <option value="PENDENTE">Pendentes</option>
+              <option value="RECEBIDO">Recebidos</option>
+              <option value="CANCELADO">Cancelados</option>
+            </select>
+          </div>
         </div>
 
         {filteredReceivables.length === 0 ? (
           <div className="rounded-xl border border-dashed border-line p-6 text-center">
-            <p className="text-sm text-muted">Nenhum recebimento encontrado.</p>
+            <p className="text-sm text-muted">
+              Nenhum recebimento encontrado.
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -506,7 +685,9 @@ export function ReceivableManager({
                 <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium text-ink">{receivable.title}</p>
+                      <p className="font-medium text-ink">
+                        {receivable.title}
+                      </p>
 
                       <span
                         className={`rounded-full px-2 py-1 text-xs ${statusClasses[receivable.status]}`}
@@ -528,15 +709,18 @@ export function ReceivableManager({
                           year: "numeric",
                           timeZone: "UTC",
                         }).format(
-                          new Date(`${receivable.referenceMonth}-01T12:00:00Z`),
+                          new Date(
+                            `${receivable.referenceMonth}-01T12:00:00Z`,
+                          ),
                         )}
                       </p>
                     )}
 
                     {receivable.receivedAccountName && (
                       <p className="text-xs text-muted">
-                        Recebido em {formatDate(receivable.receivedAt!)} pela
-                        conta {receivable.receivedAccountName}
+                        Recebido em{" "}
+                        {formatDate(receivable.receivedAt!)}{" "}
+                        pela conta {receivable.receivedAccountName}
                       </p>
                     )}
                   </div>
@@ -550,7 +734,9 @@ export function ReceivableManager({
                       <>
                         <button
                           type="button"
-                          onClick={() => startEditing(receivable)}
+                          onClick={() =>
+                            startEditing(receivable)
+                          }
                           className="rounded-lg border border-line px-3 py-2 text-xs text-ink"
                         >
                           Editar
@@ -558,7 +744,9 @@ export function ReceivableManager({
 
                         <button
                           type="button"
-                          onClick={() => openReceive(receivable)}
+                          onClick={() =>
+                            openReceive(receivable)
+                          }
                           className="rounded-lg bg-positive px-3 py-2 text-xs font-medium text-white"
                         >
                           Marcar como recebido
@@ -566,7 +754,9 @@ export function ReceivableManager({
 
                         <button
                           type="button"
-                          onClick={() => handleCancel(receivable)}
+                          onClick={() =>
+                            handleCancel(receivable)
+                          }
                           disabled={loading}
                           className="rounded-lg border border-negative/30 px-3 py-2 text-xs text-negative disabled:opacity-50"
                         >
@@ -590,10 +780,14 @@ export function ReceivableManager({
             </h2>
 
             <p className="mt-1 text-sm text-muted">
-              {receivingItem.title} — {formatBRL(receivingItem.amount)}
+              {receivingItem.title} —{" "}
+              {formatBRL(receivingItem.amount)}
             </p>
 
-            <form onSubmit={handleReceive} className="mt-5 space-y-4">
+            <form
+              onSubmit={handleReceive}
+              className="mt-5 space-y-4"
+            >
               <div>
                 <label
                   htmlFor="received-account"
@@ -605,15 +799,21 @@ export function ReceivableManager({
                 <select
                   id="received-account"
                   value={accountId}
-                  onChange={(event) => setAccountId(event.target.value)}
+                  onChange={(event) =>
+                    setAccountId(event.target.value)
+                  }
                   required
                   className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm"
                 >
                   <option value="">Selecione</option>
 
                   {accounts.map((account) => (
-                    <option key={account.id} value={account.id}>
-                      {account.bank.name} — {account.name}
+                    <option
+                      key={account.id}
+                      value={account.id}
+                    >
+                      {account.bank.name} —{" "}
+                      {account.name}
                     </option>
                   ))}
                 </select>
@@ -631,7 +831,9 @@ export function ReceivableManager({
                   id="received-date"
                   type="date"
                   value={receivedAt}
-                  onChange={(event) => setReceivedAt(event.target.value)}
+                  onChange={(event) =>
+                    setReceivedAt(event.target.value)
+                  }
                   required
                   className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm"
                 />
@@ -657,7 +859,9 @@ export function ReceivableManager({
                   disabled={loading}
                   className="rounded-xl bg-positive px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
                 >
-                  {loading ? "Registrando..." : "Confirmar recebimento"}
+                  {loading
+                    ? "Registrando..."
+                    : "Confirmar recebimento"}
                 </button>
               </div>
             </form>

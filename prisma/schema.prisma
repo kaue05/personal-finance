@@ -49,6 +49,12 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  currency          String   @default("BRL")
+  dateFormat        String   @default("DD/MM/YYYY")
+  firstDayOfWeek    String   @default("monday")
+  theme             String   @default("light")
+  fiscalYearStart   Int      @default(0)
+
   sessions Session[]
   accounts Account[]
 
