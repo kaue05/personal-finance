@@ -126,7 +126,7 @@ export function DebtManager({
 
         try {
             const response = await fetch(
-                isEditing
+                isEditing && editingDebt
                     ? `/api/debts/${editingDebt.id}`
                     : "/api/debts",
                 {
@@ -150,7 +150,7 @@ export function DebtManager({
                 );
             }
 
-            if (isEditing) {
+            if (isEditing && editingDebt) {
                 setDebts((current) =>
                     current.map((debt) =>
                         debt.id === editingDebt.id
@@ -430,7 +430,7 @@ export function DebtManager({
                             placeholder="Ex.: Empréstimo pessoal"
                             required
                             maxLength={150}
-                            className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                            className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
                         />
                     </div>
 
@@ -455,7 +455,7 @@ export function DebtManager({
                                 Boolean(editingDebt) &&
                                 editingDebt.payments.length > 0
                             }
-                            className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink disabled:opacity-50"
+                            className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink disabled:opacity-50 text-ink dark:bg-surface dark:text-ink"
                         />
 
                         {editingDebt &&
@@ -477,7 +477,7 @@ export function DebtManager({
                         <button
                             type="submit"
                             disabled={loading}
-                            className="rounded-xl bg-ink px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                            className="rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-50 bg-primary text-primary-foreground"
                         >
                             {loading
                                 ? "Salvando..."
@@ -605,7 +605,7 @@ export function DebtManager({
                                                 onClick={() =>
                                                     openPayment(debt)
                                                 }
-                                                className="rounded-xl bg-positive px-3 py-2 text-sm font-medium text-white"
+                                                className="rounded-xl px-3 py-2 text-sm font-medium bg-primary text-primary-foreground"
                                             >
                                                 Registrar pagamento
                                             </button>
@@ -708,7 +708,7 @@ export function DebtManager({
                                     placeholder="0,00"
                                     inputMode="decimal"
                                     required
-                                    className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                                    className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
                                 />
                             </div>
 
@@ -729,7 +729,7 @@ export function DebtManager({
                                         )
                                     }
                                     required
-                                    className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                                    className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
                                 >
                                     <option value="">
                                         Selecione
@@ -765,7 +765,7 @@ export function DebtManager({
                                         )
                                     }
                                     required
-                                    className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                                    className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink dark:[color-scheme:dark]"
                                 />
                             </div>
 
@@ -787,7 +787,7 @@ export function DebtManager({
                                     }
                                     maxLength={300}
                                     placeholder="Opcional"
-                                    className="min-h-20 w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                                    className="min-h-20 w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
                                 />
                             </div>
 
@@ -811,7 +811,7 @@ export function DebtManager({
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="rounded-xl bg-positive px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                                    className="rounded-xl px-4 py-2 text-sm font-medium bg-primary text-primary-foreground disabled:opacity-50"
                                 >
                                     {loading
                                         ? "Registrando..."

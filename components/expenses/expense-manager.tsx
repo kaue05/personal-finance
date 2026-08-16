@@ -452,7 +452,7 @@ export function ExpenseManager({
                 placeholder="Ex.: Compra do mercado"
                 required
                 maxLength={150}
-                className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
               />
             </div>
 
@@ -471,7 +471,7 @@ export function ExpenseManager({
                   setCategoryId(event.target.value)
                 }
                 required
-                className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
               >
                 <option value="">Selecione</option>
 
@@ -503,7 +503,7 @@ export function ExpenseManager({
                 placeholder="0,00"
                 inputMode="decimal"
                 required
-                className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
               />
             </div>
 
@@ -526,7 +526,7 @@ export function ExpenseManager({
                 }
                 disabled={Boolean(editingId)}
                 required
-                className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink disabled:opacity-50"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink disabled:opacity-50 text-ink dark:bg-surface dark:text-ink"
               />
 
               <p className="mt-1 text-xs text-muted">
@@ -550,7 +550,7 @@ export function ExpenseManager({
                   setDueDate(event.target.value)
                 }
                 required
-                className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink dark:[color-scheme:dark]"
               />
             </div>
 
@@ -564,7 +564,7 @@ export function ExpenseManager({
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-xl bg-ink px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  className="rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-50 bg-primary text-primary-foreground"
               >
                 {loading
                   ? "Salvando..."
@@ -603,7 +603,7 @@ export function ExpenseManager({
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
-              className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
+              className="rounded-xl border border-line bg-background px-3 py-2 text-sm text-ink dark:bg-surface dark:text-ink"
             >
               <option value="">Todos os meses</option>
 
@@ -620,7 +620,7 @@ export function ExpenseManager({
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
-              className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
+              className="rounded-xl border border-line bg-background px-3 py-2 text-sm text-ink dark:bg-surface dark:text-ink"
             >
               <option value="">Todos os anos</option>
 
@@ -651,7 +651,7 @@ export function ExpenseManager({
                   event.target.value as ExpenseStatus | "TODOS",
                 )
               }
-              className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
+              className="rounded-xl border border-line bg-background px-3 py-2 text-sm text-ink dark:bg-surface dark:text-ink"
             >
               <option value="TODOS">Todos</option>
               <option value="PENDENTE">Pendentes</option>
@@ -729,7 +729,7 @@ export function ExpenseManager({
                         <button
                           type="button"
                           onClick={() => openPayment(expense)}
-                          className="rounded-lg bg-positive px-3 py-2 text-xs font-medium text-white"
+                          className="rounded-lg bg-primary text-primary-foreground px-3 py-2 text-xs font-medium"
                         >
                           Marcar como pago
                         </button>
@@ -783,7 +783,7 @@ export function ExpenseManager({
                     setPaymentAccountId(event.target.value)
                   }
                   required
-                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm text-ink dark:bg-surface dark:text-ink"
                 >
                   <option value="">Selecione</option>
 
@@ -814,7 +814,7 @@ export function ExpenseManager({
                     setPaymentDate(event.target.value)
                   }
                   required
-                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm text-ink dark:bg-surface dark:text-ink dark:[color-scheme:dark]"
                 />
               </div>
 
@@ -836,7 +836,7 @@ export function ExpenseManager({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="rounded-xl bg-positive px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
                 >
                   {loading
                     ? "Registrando..."

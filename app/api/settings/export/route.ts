@@ -115,9 +115,13 @@ export async function GET(request: Request) {
 
     const csv = convertToCSV(data, type);
 
-    return new NextResponse(csv, {
+    // Adicionar BOM para UTF-8
+    const bom = "\uFEFF";
+    const csvWithBOM = bom + csv;
+
+    return new NextResponse(csvWithBOM, {
       headers: {
-        "Content-Type": "text/csv",
+        "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="${filename}"`,
       },
     });

@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth/guards";
 import { AppShell } from "@/components/layout/app-shell";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export default async function PrivateLayout({
   children,
@@ -11,8 +12,14 @@ export default async function PrivateLayout({
   const user = await requireUser();
 
   return (
-    <AppShell userName={user.name} userEmail={user.email} isAdmin={user.role === "ADMIN"}>
-      {children}
-    </AppShell>
+    <ThemeProvider defaultTheme="light" storageKey="theme">
+      <AppShell
+        userName={user.name}
+        userEmail={user.email}
+        isAdmin={user.role === "ADMIN"}
+      >
+        {children}
+      </AppShell>
+    </ThemeProvider>
   );
 }

@@ -1,29 +1,37 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState, use } from "react";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input, Label } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 
-export function LoginForm() {
+export function LoginForm({
+  searchParams,
+}: {
+  searchParams: Promise<{ erro?: string; redirect?: string }>;
+}) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") ?? "/dashboard";
-  const desativada = searchParams.get("erro") === "conta-desativada";
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Ler searchParams assincronamente
+  const params = use(searchParams);
+  const redirectTo = params.redirect ?? "/dashboard";
+  const desativada = params.erro === "conta-desativada";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    const { error: signInError } = await authClient.signIn.email({ email, password });
+    const { error: signInError } = await authClient.signIn.email({
+      email,
+      password,
+    });
 
     setLoading(false);
 

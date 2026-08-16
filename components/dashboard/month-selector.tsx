@@ -3,6 +3,14 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
 
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+
 const MONTHS = [
     { value: "01", label: "Janeiro" },
     { value: "02", label: "Fevereiro" },
@@ -44,27 +52,24 @@ export function MonthSelector() {
 
     const monthParam = searchParams.get("month");
 
-    const [selectedMonth, setSelectedMonth] = useState("");
-    const [selectedYear, setSelectedYear] = useState("");
+    const now = new Date();
+    const defaultYear = String(now.getFullYear());
+    const defaultMonth = String(now.getMonth() + 1).padStart(2, "0");
+
+    const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
+    const [selectedYear, setSelectedYear] = useState(defaultYear);
 
     useEffect(() => {
         if (monthParam) {
             const [year, month] = monthParam.split("-");
 
-            setSelectedMonth(month);
-            setSelectedYear(year);
+            setSelectedMonth(month ?? defaultMonth);
+            setSelectedYear(year ?? defaultYear);
         } else {
-            const now = new Date();
-            const year = String(now.getFullYear());
-            const month = String(now.getMonth() + 1).padStart(
-                2,
-                "0",
-            );
-
-            setSelectedMonth(month);
-            setSelectedYear(year);
+            setSelectedMonth(defaultMonth);
+            setSelectedYear(defaultYear);
         }
-    }, [monthParam]);
+    }, [monthParam, defaultMonth, defaultYear]);
 
     function handleChange(
         field: "month" | "year",
@@ -85,39 +90,37 @@ export function MonthSelector() {
 
     return (
         <div className="flex items-center gap-2">
-            <select
+            <Select
                 value={selectedMonth}
-                onChange={(e) =>
-                    handleChange("month", e.target.value)
-                }
-                className="rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                onValueChange={(value) => handleChange("month", value)}
             >
-                {MONTHS.map((month) => (
-                    <option
-                        key={month.value}
-                        value={month.value}
-                    >
-                        {month.label}
-                    </option>
-                ))}
-            </select>
+                <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Mês" />
+                </SelectTrigger>
+                <SelectContent>
+                    {MONTHS.map((month) => (
+                        <SelectItem key={month.value} value={month.value}>
+                            {month.label}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
 
-            <select
+            <Select
                 value={selectedYear}
-                onChange={(e) =>
-                    handleChange("year", e.target.value)
-                }
-                className="rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                onValueChange={(value) => handleChange("year", value)}
             >
-                {YEARS.map((year) => (
-                    <option
-                        key={year.value}
-                        value={year.value}
-                    >
-                        {year.label}
-                    </option>
-                ))}
-            </select>
+                <SelectTrigger className="w-[100px]">
+                    <SelectValue placeholder="Ano" />
+                </SelectTrigger>
+                <SelectContent>
+                    {YEARS.map((year) => (
+                        <SelectItem key={year.value} value={year.value}>
+                            {year.label}
+                        </SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
         </div>
     );
 }

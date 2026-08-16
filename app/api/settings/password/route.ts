@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { requireUser } from "@/lib/auth/guards";
-import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 const updatePasswordSchema = z
   .object({
@@ -39,19 +39,21 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // Better Auth já tem método para mudar senha
+    // Better Auth changePassword usa a sessão, não precisa de userId
     await auth.api.changePassword({
+      headers: await headers(),
       body: {
         newPassword: parsed.data.newPassword,
         currentPassword: parsed.data.currentPassword,
-        userId: user.id,
       },
     });
 
     return NextResponse.json({
       success: true,
     });
-  } catch {
+  } catch (error) {
+    console.error("Erro ao alterar senha:", error);
+
     return NextResponse.json(
       { error: "Não foi possível alterar a senha" },
       { status: 500 },

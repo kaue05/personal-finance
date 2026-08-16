@@ -3,8 +3,7 @@
 @tailwind utilities;
 
 :root {
-  /* Paleta — inspirada em livro-razão: papel neutro, tinta verde-floresta,
-     bronze para destaques, verde/vermelho para entradas e saídas. */
+  /* Tema claro */
   --color-bg: #f5f6f3;
   --color-surface: #ffffff;
   --color-ink: #16211b;
@@ -19,6 +18,30 @@
 
   --color-positive: #2d6a4f;
   --color-negative: #9b2c2c;
+
+  --color-popover: #ffffff;
+  --color-popover-foreground: #16211b;
+}
+
+.dark {
+  /* Tema escuro */
+  --color-bg: #0a0f0d;
+  --color-surface: #111814;
+  --color-ink: #e8ece9;
+  --color-border: #1f2924;
+  --color-muted: #8a9489;
+
+  --color-primary: #2d8a6e;
+  --color-primary-foreground: #0a0f0d;
+
+  --color-accent: #d4a574;
+  --color-accent-foreground: #22160d;
+
+  --color-positive: #4ade80;
+  --color-negative: #f87171;
+
+  --color-popover: #111814;
+  --color-popover-foreground: #e8ece9;
 }
 
 * {

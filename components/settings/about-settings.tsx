@@ -44,7 +44,7 @@ export function AboutSettings() {
                 </p>
 
                 <a
-                    href="https://github.com/seu-usuario/seu-repo"
+                    href="https://github.com/kaue05/personal-finance"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="mt-4 inline-block text-sm font-medium text-ink underline underline-offset-4 hover:text-ink/80"

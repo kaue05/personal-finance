@@ -21,6 +21,10 @@ const config: Config = {
         },
         positive: "var(--color-positive)",
         negative: "var(--color-negative)",
+        popover: {
+          DEFAULT: "var(--color-popover)",
+          foreground: "var(--color-popover-foreground)",
+        },
       },
       fontFamily: {
         display: ["var(--font-display)", "serif"],

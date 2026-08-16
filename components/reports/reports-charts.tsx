@@ -235,7 +235,7 @@ export function ReportsCharts({
                                 e.target.value as PeriodOption,
                             )
                         }
-                        className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
+                        className="rounded-xl border border-line bg-background px-3 py-2 text-sm text-ink dark:bg-surface dark:text-ink"
                     >
                         {PERIOD_OPTIONS.map((option) => (
                             <option

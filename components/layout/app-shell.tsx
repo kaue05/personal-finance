@@ -7,6 +7,7 @@ import { Menu, X, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PRIVATE_NAV_ITEMS } from "@/components/layout/nav-items";
 import { SignOutButton } from "@/components/layout/sign-out-button";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 function Brand() {
   return (
@@ -64,25 +65,33 @@ export function AppShell({
   return (
     <div className="min-h-dvh md:flex">
       {/* Sidebar fixa — desktop */}
-      <aside className="hidden w-64 shrink-0 border-r border-border bg-surface p-4 md:flex md:flex-col">
-        <Brand />
-        <div className="mt-6 flex flex-1 flex-col">
-          <NavLinks />
-          {isAdmin && (
-            <Link
-              href="/admin/dashboard"
-              className="mt-4 flex items-center gap-3 rounded-md border border-dashed border-border px-3 py-2 text-sm text-ink/80 hover:bg-bg"
-            >
-              <ShieldCheck className="h-4 w-4 shrink-0" />
-              Área administrativa
-            </Link>
-          )}
-        </div>
-        <div className="mt-4 border-t border-border pt-3">
-          <p className="truncate text-sm font-medium text-ink">{userName}</p>
-          <p className="truncate text-xs text-muted">{userEmail}</p>
-          <div className="mt-2">
-            <SignOutButton />
+      <aside className="hidden md:flex md:w-64 md:flex-col md:border-r md:border-border md:bg-surface">
+        <div className="sticky top-0 flex flex-col p-4">
+          <Brand />
+
+          {/* Links de navegação */}
+          <div className="mt-6 flex flex-1 flex-col">
+            <NavLinks />
+
+            {isAdmin && (
+              <Link
+                href="/admin/dashboard"
+                className="mt-4 flex items-center gap-3 rounded-md border border-dashed border-border px-3 py-2 text-sm text-ink/80 hover:bg-bg"
+              >
+                <ShieldCheck className="h-4 w-4 shrink-0" />
+                Área administrativa
+              </Link>
+            )}
+          </div>
+
+          {/* Footer fixo no final da sidebar */}
+          <div className="mt-6 border-t border-border pt-3">
+            <p className="truncate text-sm font-medium text-ink">{userName}</p>
+            <p className="truncate text-xs text-muted">{userEmail}</p>
+            <div className="mt-2 flex items-center gap-2">
+              <ThemeToggle />
+              <SignOutButton />
+            </div>
           </div>
         </div>
       </aside>

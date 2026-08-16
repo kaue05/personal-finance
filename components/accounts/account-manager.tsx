@@ -210,7 +210,7 @@ export function AccountManager({
                 value={bankId}
                 onChange={(event) => setBankId(event.target.value)}
                 required
-                className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
               >
                 <option value="">Selecione</option>
 
@@ -237,7 +237,7 @@ export function AccountManager({
                 placeholder="Ex.: Conta principal"
                 required
                 maxLength={80}
-                className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
               />
             </div>
 
@@ -253,7 +253,7 @@ export function AccountManager({
                 id="account-type"
                 value={type}
                 onChange={(event) => setType(event.target.value as AccountType)}
-                className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
               >
                 <option value="CORRENTE">Conta corrente</option>
                 <option value="POUPANCA">Poupança</option>
@@ -271,7 +271,7 @@ export function AccountManager({
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-xl bg-ink px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  className="rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-50 bg-primary text-primary-foreground"
               >
                 {loading
                   ? "Salvando..."

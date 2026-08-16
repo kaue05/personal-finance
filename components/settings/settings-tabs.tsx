@@ -4,7 +4,6 @@ import { useState } from "react";
 
 import { ProfileSettings } from "./profile-settings";
 import { PreferencesSettings } from "./preferences-settings";
-import { FinancialSettings } from "./financial-settings";
 import { SecuritySettings } from "./security-settings";
 import { DataSettings } from "./data-settings";
 import { AboutSettings } from "./about-settings";
@@ -12,7 +11,6 @@ import { AboutSettings } from "./about-settings";
 type Tab =
     | "profile"
     | "preferences"
-    | "financial"
     | "security"
     | "data"
     | "about";
@@ -56,7 +54,6 @@ const TABS: {
 }[] = [
         { value: "profile", label: "Perfil" },
         { value: "preferences", label: "Preferências" },
-        { value: "financial", label: "Financeiro" },
         { value: "security", label: "Segurança" },
         { value: "data", label: "Dados" },
         { value: "about", label: "Sobre" },
@@ -96,13 +93,6 @@ export function SettingsTabs({
 
                 {selectedTab === "preferences" && (
                     <PreferencesSettings />
-                )}
-
-                {selectedTab === "financial" && (
-                    <FinancialSettings
-                        inactiveBanks={inactiveBanks}
-                        inactiveAccounts={inactiveAccounts}
-                    />
                 )}
 
                 {selectedTab === "security" && (

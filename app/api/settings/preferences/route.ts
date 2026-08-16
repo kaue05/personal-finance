@@ -60,12 +60,26 @@ export async function GET(request: Request) {
   try {
     const user = await requireUser();
 
+    // Buscar o usuário completo no Prisma para pegar as preferências
+    const fullUser = await prisma.user.findUnique({
+      where: {
+        id: user.id,
+      },
+    });
+
+    if (!fullUser) {
+      return NextResponse.json(
+        { error: "Usuário não encontrado" },
+        { status: 404 },
+      );
+    }
+
     return NextResponse.json({
-      currency: user.currency,
-      dateFormat: user.dateFormat,
-      firstDayOfWeek: user.firstDayOfWeek,
-      theme: user.theme,
-      fiscalYearStart: user.fiscalYearStart,
+      currency: fullUser.currency,
+      dateFormat: fullUser.dateFormat,
+      firstDayOfWeek: fullUser.firstDayOfWeek,
+      theme: fullUser.theme,
+      fiscalYearStart: fullUser.fiscalYearStart,
     });
   } catch {
     return NextResponse.json(

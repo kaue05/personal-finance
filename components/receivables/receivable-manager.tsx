@@ -456,7 +456,7 @@ export function ReceivableManager({
                 placeholder="Ex.: Pagamento do salário"
                 required
                 maxLength={150}
-                className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
               />
             </div>
 
@@ -475,7 +475,7 @@ export function ReceivableManager({
                   setCategoryId(event.target.value)
                 }
                 required
-                className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
               >
                 <option value="">Selecione</option>
 
@@ -507,7 +507,7 @@ export function ReceivableManager({
                 placeholder="0,00"
                 inputMode="decimal"
                 required
-                className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
               />
             </div>
 
@@ -527,7 +527,7 @@ export function ReceivableManager({
                   setExpectedDate(event.target.value)
                 }
                 required
-                className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink dark:[color-scheme:dark]"
               />
             </div>
 
@@ -547,7 +547,7 @@ export function ReceivableManager({
                   setReferenceMonth(event.target.value)
                 }
                 required
-                className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink dark:[color-scheme:dark]"
               />
 
               <p className="mt-1 text-xs text-muted">
@@ -566,7 +566,7 @@ export function ReceivableManager({
               <button
                 type="submit"
                 disabled={loading}
-                className="rounded-xl bg-ink px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  className="rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-50 bg-primary text-primary-foreground"
               >
                 {loading
                   ? "Salvando..."
@@ -607,7 +607,7 @@ export function ReceivableManager({
               onChange={(e) =>
                 setSelectedMonth(e.target.value)
               }
-              className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
+              className="rounded-xl border border-line bg-background px-3 py-2 text-sm text-ink dark:bg-surface dark:text-ink"
             >
               <option value="">Todos os meses</option>
 
@@ -626,7 +626,7 @@ export function ReceivableManager({
               onChange={(e) =>
                 setSelectedYear(e.target.value)
               }
-              className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
+              className="rounded-xl border border-line bg-background px-3 py-2 text-sm text-ink dark:bg-surface dark:text-ink"
             >
               <option value="">Todos os anos</option>
 
@@ -659,7 +659,7 @@ export function ReceivableManager({
                   | "TODOS",
                 )
               }
-              className="rounded-xl border border-line bg-background px-3 py-2 text-sm"
+              className="rounded-xl border border-line bg-background px-3 py-2 text-sm text-ink dark:bg-surface dark:text-ink"
             >
               <option value="TODOS">Todos</option>
               <option value="PENDENTE">Pendentes</option>
@@ -747,7 +747,7 @@ export function ReceivableManager({
                           onClick={() =>
                             openReceive(receivable)
                           }
-                          className="rounded-lg bg-positive px-3 py-2 text-xs font-medium text-white"
+                          className="rounded-lg px-3 py-2 text-xs font-medium bg-primary text-primary-foreground"
                         >
                           Marcar como recebido
                         </button>
@@ -803,7 +803,7 @@ export function ReceivableManager({
                     setAccountId(event.target.value)
                   }
                   required
-                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm text-ink dark:bg-surface dark:text-ink"
                 >
                   <option value="">Selecione</option>
 
@@ -835,7 +835,7 @@ export function ReceivableManager({
                     setReceivedAt(event.target.value)
                   }
                   required
-                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm"
+                  className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm text-ink dark:bg-surface dark:text-ink dark:[color-scheme:dark]"
                 />
               </div>
 
@@ -857,7 +857,7 @@ export function ReceivableManager({
                 <button
                   type="submit"
                   disabled={loading}
-                  className="rounded-xl bg-positive px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+                  className="rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-50 bg-primary text-primary-foreground"
                 >
                   {loading
                     ? "Registrando..."

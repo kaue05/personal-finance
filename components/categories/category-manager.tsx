@@ -210,7 +210,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
               placeholder="Ex.: Mercado"
               required
               maxLength={60}
-              className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+              className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
             />
           </div>
 
@@ -226,7 +226,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
               id="category-type"
               value={type}
               onChange={(event) => setType(event.target.value as CategoryType)}
-              className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+              className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
             >
               <option value="EXPENSE">Gasto</option>
               <option value="RECEIVABLE">Recebimento</option>
@@ -243,7 +243,7 @@ export function CategoryManager({ initialCategories }: CategoryManagerProps) {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-ink px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              className="rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-50 bg-primary text-primary-foreground"
             >
               {loading
                 ? "Salvando..."

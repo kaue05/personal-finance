@@ -1,6 +1,8 @@
+// app/(admin)/admin/usuarios/page.tsx
 import { prisma } from "@/lib/prisma";
 import { Card } from "@/components/ui/card";
 import { formatDateBR } from "@/lib/utils";
+import { ToggleUserStatusButton } from "@/components/admin/toggle-user-status-button";
 
 export default async function AdminUsuariosPage() {
   const users = await prisma.user.findMany({
@@ -18,10 +20,11 @@ export default async function AdminUsuariosPage() {
   return (
     <div className="mx-auto max-w-5xl">
       <header className="mb-6">
-        <h1 className="font-display text-2xl text-ink sm:text-3xl">Usuários</h1>
+        <h1 className="font-display text-2xl text-ink sm:text-3xl">
+          Usuários
+        </h1>
         <p className="mt-1 text-sm text-muted">
-          Apenas informações básicas de conta. Ativar/desativar usuários será adicionado em uma
-          próxima fase.
+          Gerencie o status das contas. Ativar/desativar não afeta dados financeiros.
         </p>
       </header>
 
@@ -34,6 +37,7 @@ export default async function AdminUsuariosPage() {
               <th className="px-4 py-3 font-medium">Papel</th>
               <th className="px-4 py-3 font-medium">Status</th>
               <th className="px-4 py-3 font-medium">Criado em</th>
+              <th className="px-4 py-3 font-medium">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -54,6 +58,12 @@ export default async function AdminUsuariosPage() {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-ink/80">{formatDateBR(u.createdAt)}</td>
+                <td className="px-4 py-3">
+                  <ToggleUserStatusButton
+                    userId={u.id}
+                    isActive={u.active}
+                  />
+                </td>
               </tr>
             ))}
           </tbody>

@@ -18,9 +18,6 @@ type SecuritySettingsProps = {
 
 export function SecuritySettings({ sessions }: SecuritySettingsProps) {
     const [revokingId, setRevokingId] = useState<string | null>(null);
-    const [showDeleteConfirm, setShowDeleteConfirm] =
-        useState(false);
-    const [isDeleting, setIsDeleting] = useState(false);
 
     async function handleRevokeSession(id: string) {
         setRevokingId(id);
@@ -37,32 +34,6 @@ export function SecuritySettings({ sessions }: SecuritySettingsProps) {
             window.location.reload();
         } catch {
             setRevokingId(null);
-        }
-    }
-
-    async function handleDeleteAccount() {
-        setIsDeleting(true);
-
-        try {
-            const response = await fetch("/api/settings/account", {
-            method: "DELETE",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                confirm: "DELETE_MY_ACCOUNT",
-            }),
-            });
-
-            if (!response.ok) {
-            throw new Error("Não foi possível excluir a conta");
-            }
-
-            // Redirecionar para home ou login
-            window.location.href = "/";
-        } catch {
-            setIsDeleting(false);
-            setShowDeleteConfirm(false);
         }
     }
 
@@ -157,51 +128,6 @@ export function SecuritySettings({ sessions }: SecuritySettingsProps) {
                 <Button className="mt-4" variant="outline" disabled>
                     Em breve
                 </Button>
-            </section>
-
-            <section>
-                <h2 className="font-display text-lg text-ink">
-                    Excluir conta
-                </h2>
-
-                <p className="mt-1 text-sm text-muted">
-                    Esta ação é irreversível. Todos os seus dados serão
-                    permanentemente apagados.
-                </p>
-
-                {!showDeleteConfirm ? (
-                    <Button
-                        className="mt-4"
-                        variant="destructive"
-                        onClick={() => setShowDeleteConfirm(true)}
-                    >
-                        Excluir conta
-                    </Button>
-                ) : (
-                    <div className="mt-4 rounded border border-red-200 bg-red-50 p-4">
-                        <p className="text-sm text-red-800">
-                            Tem certeza? Esta ação não pode ser desfeita.
-                        </p>
-
-                        <div className="mt-4 flex gap-2">
-                            <Button
-                                variant="destructive"
-                                onClick={handleDeleteAccount}
-                                disabled={isDeleting}
-                            >
-                                {isDeleting ? "Excluindo..." : "Sim, excluir minha conta"}
-                            </Button>
-
-                            <Button
-                                variant="outline"
-                                onClick={() => setShowDeleteConfirm(false)}
-                                disabled={isDeleting}
-                            >
-                                Cancelar
-                            </Button>
-                        </div>
-                    </div>
-                )}
             </section>
         </div>
     );

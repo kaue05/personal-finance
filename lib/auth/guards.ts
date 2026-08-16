@@ -22,7 +22,7 @@ export async function requireUser() {
   }
 
   if (!session.user.active) {
-    redirect("/login?erro=conta-desativada");
+    redirect("/conta-desativada");
   }
 
   return session.user;

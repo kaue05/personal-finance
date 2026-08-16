@@ -176,7 +176,7 @@ export function BankManager({ initialBanks }: BankManagerProps) {
               placeholder="Ex.: Nubank"
               required
               maxLength={80}
-              className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+              className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
             />
           </div>
 
@@ -194,7 +194,7 @@ export function BankManager({ initialBanks }: BankManagerProps) {
               value={logoUrl}
               onChange={(event) => setLogoUrl(event.target.value)}
               placeholder="Opcional"
-              className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink"
+              className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink text-ink dark:bg-surface dark:text-ink"
             />
           </div>
 
@@ -208,7 +208,7 @@ export function BankManager({ initialBanks }: BankManagerProps) {
             <button
               type="submit"
               disabled={loading}
-              className="rounded-xl bg-ink px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+              className="rounded-xl px-4 py-2 text-sm font-medium disabled:opacity-50 bg-primary text-primary-foreground"
             >
               {loading
                 ? "Salvando..."
