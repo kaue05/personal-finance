@@ -3,6 +3,12 @@ import { prisma } from "@/lib/prisma";
 
 import { SettingsTabs } from "@/components/settings/settings-tabs";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Configurações",
+};
+
 export default async function SettingsPage() {
   const user = await requireUser();
 

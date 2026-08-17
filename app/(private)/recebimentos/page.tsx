@@ -3,6 +3,12 @@ import { prisma } from "@/lib/prisma";
 
 import { ReceivableManager } from "@/components/receivables/receivable-manager";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Recebimentos",
+};
+
 export default async function ReceivablesPage() {
   const user = await requireUser();
 

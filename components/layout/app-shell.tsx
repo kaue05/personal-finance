@@ -8,14 +8,21 @@ import { cn } from "@/lib/utils";
 import { PRIVATE_NAV_ITEMS } from "@/components/layout/nav-items";
 import { SignOutButton } from "@/components/layout/sign-out-button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import Image from "next/image";
 
 function Brand() {
   return (
     <Link href="/dashboard" className="flex items-center gap-2 px-1">
-      <span className="flex h-7 w-7 items-center justify-center rounded-sm bg-primary font-display text-sm text-primary-foreground">
-        R
+      <Image
+        src="/logo.png"
+        alt="Personal Finance Logo"
+        width={28}
+        height={28}
+        className="rounded-sm"
+      />
+      <span className="font-display text-lg tracking-tight text-ink">
+        Personal Finance
       </span>
-      <span className="font-display text-lg tracking-tight text-ink">Razão</span>
     </Link>
   );
 }

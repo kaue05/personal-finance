@@ -42,6 +42,10 @@ export async function POST(request: Request) {
         : ["Título", "Categoria", "Valor", "Previsto para"];
 
     const firstRow = data[0];
+    if (!firstRow) {
+      return NextResponse.json({ error: "Dados inválidos" }, { status: 400 });
+    }
+
     const missingColumns = requiredColumns.filter((col) => !(col in firstRow));
 
     if (missingColumns.length > 0) {

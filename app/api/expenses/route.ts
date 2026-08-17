@@ -27,7 +27,8 @@ const createExpenseSchema = z.object({
     .number()
     .int()
     .min(1, "A quantidade mínima é 1")
-    .max(120, "A quantidade máxima é 120"),
+    .max(120, "A quantidade máxima é 120")
+    .default(1),
 });
 
 function parseDate(value: string) {
@@ -42,13 +43,12 @@ function parseDate(value: string) {
 
 function parseCents(value: string) {
   const normalized = value.replace(",", ".");
-  const [integerPart, decimalPart = ""] = normalized.split(".");
+  const [integerPart = "0", decimalPart = ""] = normalized.split(".");
 
   const cents = decimalPart.padEnd(2, "0").slice(0, 2);
 
   return BigInt(integerPart) * 100n + BigInt(cents);
 }
-
 function formatCents(cents: bigint) {
   const integerPart = cents / 100n;
   const decimalPart = (cents % 100n).toString().padStart(2, "0");
@@ -181,7 +181,17 @@ export async function POST(request: Request) {
       );
     }
 
-    const installmentCount = installmentTotal;
+    // ✅ Garante que installmentTotal tem valor
+    const safeInstallmentTotal = installmentTotal ?? 1;
+
+    if (!safeInstallmentTotal || safeInstallmentTotal < 1) {
+      return NextResponse.json(
+        { error: "Quantidade de parcelas inválida" },
+        { status: 400 },
+      );
+    }
+
+    const installmentCount = safeInstallmentTotal;
     const baseCents = totalCents / BigInt(installmentCount);
     const remainder = totalCents % BigInt(installmentCount);
 

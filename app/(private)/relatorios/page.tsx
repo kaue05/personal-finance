@@ -2,6 +2,12 @@ import { requireUser } from "@/lib/auth/guards";
 
 import { ReportsCharts } from "@/components/reports/reports-charts";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Relatórios",
+};
+
 export default async function ReportsPage() {
   const user = await requireUser();
 

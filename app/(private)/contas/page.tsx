@@ -3,6 +3,12 @@ import { prisma } from "@/lib/prisma";
 
 import { AccountManager } from "@/components/accounts/account-manager";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Contas",
+};
+
 export default async function AccountsPage() {
   const user = await requireUser();
 

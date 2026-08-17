@@ -5,6 +5,12 @@ import { prisma } from "@/lib/prisma";
 
 import { DebtManager } from "@/components/debts/debt-manager";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dívidas",
+};
+
 export default async function DebtsPage() {
   const user = await requireUser();
 

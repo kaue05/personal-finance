@@ -452,13 +452,14 @@ export function DebtManager({
                             inputMode="decimal"
                             required
                             disabled={
-                                Boolean(editingDebt) &&
+                                editingDebt !== null &&
                                 editingDebt.payments.length > 0
                             }
                             className="w-full rounded-xl border border-line bg-background px-3 py-2 text-sm outline-none focus:border-ink disabled:opacity-50 text-ink dark:bg-surface dark:text-ink"
                         />
 
                         {editingDebt &&
+                            editingDebt.payments &&
                             editingDebt.payments.length > 0 && (
                                 <p className="mt-1 text-xs text-muted">
                                     O valor está bloqueado porque esta dívida possui

@@ -7,6 +7,11 @@ import {
 } from "@/components/ui/card";
 import { formatBRL } from "@/lib/utils";
 import { MonthSelector } from "@/components/dashboard/month-selector";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+};
 
 export default async function DashboardPage({
   searchParams,

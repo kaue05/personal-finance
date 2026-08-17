@@ -3,6 +3,12 @@ import { prisma } from "@/lib/prisma";
 
 import { ExpenseManager } from "@/components/expenses/expense-manager";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Gastos",
+};
+
 export default async function ExpensesPage() {
   const user = await requireUser();
 

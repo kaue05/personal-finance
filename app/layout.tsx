@@ -20,8 +20,14 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Finanças",
+  title: {
+    default: "Personal Finance",
+    template: "%s | Personal Finance", // ← Dinâmico: "Dashboard | Personal Finance"
+  },
   description: "Controle financeiro pessoal",
+  icons: {
+    icon: "/logo.png", // ← Sua logo como favicon
+  },
 };
 
 export default function RootLayout({

@@ -3,6 +3,12 @@ import { prisma } from "@/lib/prisma";
 
 import { CategoryManager } from "@/components/categories/category-manager";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Categorias",
+};
+
 export default async function CategoriesPage() {
   const user = await requireUser();
 

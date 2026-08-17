@@ -3,6 +3,12 @@ import { prisma } from "@/lib/prisma";
 
 import { BankManager } from "@/components/banks/bank-manager";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Bancos",
+};
+
 export default async function BanksPage() {
   const user = await requireUser();
 

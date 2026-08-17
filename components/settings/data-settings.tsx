@@ -76,7 +76,7 @@ export function DataSettings() {
             const type = isExpenses ? "expenses" : "receivables";
 
             // Parse CSV
-            const headers = lines[0].split(";").map((h) => h.trim().replace(/"/g, ""));
+            const headers = lines[0]!.split(";").map((h) => h.trim().replace(/"/g, ""));
             const data = lines.slice(1).map((line) => {
                 const values = line.split(";").map((v) => v.trim().replace(/"/g, ""));
                 const row: Record<string, string> = {};
@@ -211,7 +211,11 @@ export function DataSettings() {
 
                     <Button
                         variant="outline"
-                        onClick={() => fileInputRef.current?.click()}
+                        onClick={() => {
+                            if (fileInputRef.current) {
+                                fileInputRef.current.click();
+                            }
+                        }}
                         disabled={isImporting}
                     >
                         {isImporting ? "Importando..." : "Selecionar arquivo CSV"}

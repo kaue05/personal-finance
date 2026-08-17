@@ -9,6 +9,7 @@ import {
   BarChart3,
   Tag,
   Settings,
+  ArrowRightLeft,
 } from "lucide-react";
 
 export interface NavItem {
@@ -23,6 +24,7 @@ export const PRIVATE_NAV_ITEMS: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/gastos", label: "Gastos", icon: Receipt },
   { href: "/recebimentos", label: "Recebimentos", icon: Landmark },
+  { href: "/transferencias", label: "Transferências", icon: ArrowRightLeft },
   { href: "/contas", label: "Contas", icon: Wallet },
   { href: "/bancos", label: "Bancos", icon: Building2 },
   { href: "/dividas", label: "Dívidas", icon: HandCoins },
